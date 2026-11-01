@@ -1,0 +1,33 @@
+# Blueprint de Render. Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: cotizador-pisos-blandos
+    runtime: python
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      # Clave para entrar a /estadisticas. Cambiarla acá si no se quiere la
+      # default del código (PisosBlandos2026).
+      - key: ESTADISTICAS_CLAVE
+        sync: false
+      # Firma de la cookie de sesión (login simple, solo correo). Si se deja
+      # vacío, el código genera una al azar en cada arranque — funciona
+      # igual, pero cierra sesión a todos en cada deploy/reinicio.
+      - key: SECRET_KEY
+        sync: false
+      # Dominios de correo autorizados para iniciar sesión (separados por
+      # coma). Default: solo mk.cl.
+      - key: ALLOWED_EMAIL_DOMAINS
+        value: mk.cl
+      # Historial de cotizaciones (SQLite). El disco de Render es efímero en
+      # todos los planes salvo que se agregue un disco persistente aparte, así
+      # que la numeración y Estadísticas se reinician en cada deploy.
+      - key: DATA_DIR
+        value: ./data

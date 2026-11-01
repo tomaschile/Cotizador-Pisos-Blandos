@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estadísticas — Cotizador de Pisos Blandos</title>
+<style>
+  :root { font-family: Arial, Helvetica, sans-serif; }
+  body { margin: 0; background: #f4f5f7; color: #1f2a44; }
+  .logos { display: flex; align-items: center; justify-content: center; background: #fff; padding: 14px 16px; border-bottom: 1px solid #d7dce1; }
+  .logos img { height: 34px; width: auto; display: block; }
+  .modenav { display: flex; flex-wrap: wrap; gap: 18px; justify-content: center; background: #1f2a44; padding: 14px 24px; font-size: 13px; }
+  .modenav a { color: #cdd3e0; text-decoration: none; padding: 2px 2px; border-bottom: 2px solid transparent; }
+  .modenav a:hover { color: #fff; }
+  .modenav a.active { color: #fff; border-bottom-color: #fff; font-weight: bold; }
+  .userbar { display: flex; justify-content: flex-end; gap: 10px; align-items: baseline; max-width: 1000px; margin: 10px auto -4px; padding: 0 20px; font-size: 12px; color: #666; }
+  .userbar button { background: none; border: none; color: #1f2a44; text-decoration: underline; cursor: pointer; font-size: 12px; padding: 0; }
+  header { background: #1f2a44; color: #fff; padding: 4px 24px 18px; }
+  header h1 { margin: 0; font-size: 20px; text-align: center; }
+  main { max-width: 1000px; margin: 0 auto; padding: 20px; }
+  .card { background: #fff; border-radius: 8px; padding: 18px; margin-bottom: 18px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  input { padding: 7px 10px; border: 1px solid #c9ccd3; border-radius: 4px; font-size: 13px; }
+  button { background: #1f2a44; color: #fff; border: none; border-radius: 4px; padding: 8px 14px; cursor: pointer; font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+  th, td { border: 1px solid #e1e3e8; padding: 6px 8px; text-align: left; }
+  th { background: #e8ecf5; }
+  .descarga { background: #fff; color: #1f2a44; border: 1px solid #1f2a44; padding: 4px 8px; font-size: 12px; }
+  #mensaje { color: #c0392b; margin-top: 8px; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="logos">
+  <a href="https://www.mk.cl" target="_blank" rel="noopener"><img src="/assets/logo-mk.svg" alt="MK"></a>
+</div>
+<nav class="modenav">
+  <a href="/cotizador">Cotizar</a>
+  <a href="/selector">Selector</a>
+  <a href="/buscar">Buscar cotizaciones</a>
+  <a href="/estadisticas" class="active">Estadísticas</a>
+</nav>
+<div class="userbar">
+  <span id="userNombre"></span>
+  <button type="button" onclick="salir()">Salir</button>
+</div>
+<header>
+  <h1>ESTADÍSTICAS</h1>
+</header>
+<main>
+  <div class="card" id="login">
+    <label>Clave de acceso</label><br><br>
+    <input type="password" id="clave" placeholder="Clave">
+    <button onclick="entrar()">Entrar</button>
+    <div id="mensaje"></div>
+  </div>
+
+  <div class="card" id="tabla" style="display:none">
+    <table>
+      <thead>
+        <tr><th>N°</th><th>Fecha</th><th>Cliente</th><th>Vendedor</th><th>m² total</th><th></th></tr>
+      </thead>
+      <tbody id="filas"></tbody>
+    </table>
+    <div id="mensajeTabla" style="color:#c0392b; margin-top:8px; font-size:13px;"></div>
+  </div>
+</main>
+
+<script>
+let CLAVE = '';
+
+function irALogin() { window.location = '/'; }
+
+function salir() {
+  fetch('/logout', { method: 'POST' }).then(irALogin).catch(irALogin);
+}
+
+fetch('/whoami').then(r => {
+  if (r.status === 401) { irALogin(); return; }
+  return r.json();
+}).then(u => { if (u) document.getElementById('userNombre').textContent = u.nombre; });
+
+async function entrar() {
+  CLAVE = document.getElementById('clave').value;
+  const r = await fetch('/estadisticas/datos', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({clave: CLAVE}),
+  });
+  if (r.status === 401) { irALogin(); return; }
+  const data = await r.json();
+  if (!r.ok) {
+    document.getElementById('mensaje').textContent = data.detail || 'Error';
+    return;
+  }
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('tabla').style.display = 'block';
+  renderFilas(data.cotizaciones);
+}
+
+function renderFilas(cotizaciones) {
+  const tbody = document.getElementById('filas');
+  tbody.innerHTML = cotizaciones.map(c => `
+    <tr>
+      <td>${c.id}</td>
+      <td>${c.fecha}</td>
+      <td>${c.cliente || ''}</td>
+      <td>${c.vendedor || ''}</td>
+      <td>${c.m2_total}</td>
+      <td>
+        <button class="descarga" onclick="descargar(${c.id}, 'excel')">Excel</button>
+        <button class="descarga" onclick="descargar(${c.id}, 'pdf')">PDF</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function descargar(numero, tipo) {
+  const a = document.createElement('a');
+  a.href = `/descarga/${numero}/${tipo}`;
+  a.click();
+}
+</script>
+</body>
+</html>

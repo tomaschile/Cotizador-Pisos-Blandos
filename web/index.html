@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cotizador de Pisos Blandos</title>
+<style>
+  :root { font-family: Arial, Helvetica, sans-serif; }
+  body { margin: 0; background: #f4f5f7; color: #1f2a44; }
+  .logos { display: flex; align-items: center; justify-content: center; background: #fff; padding: 14px 16px; border-bottom: 1px solid #d7dce1; }
+  .logos img { height: 34px; width: auto; display: block; }
+  .modenav { display: flex; flex-wrap: wrap; gap: 18px; justify-content: center; background: #1f2a44; padding: 14px 24px; font-size: 13px; }
+  .modenav a { color: #cdd3e0; text-decoration: none; padding: 2px 2px; border-bottom: 2px solid transparent; }
+  .modenav a:hover { color: #fff; }
+  .modenav a.active { color: #fff; border-bottom-color: #fff; font-weight: bold; }
+  .userbar { display: flex; justify-content: flex-end; gap: 10px; align-items: baseline; max-width: 1150px; margin: 10px auto -4px; padding: 0 20px; font-size: 12px; color: #666; }
+  .userbar button { background: none; border: none; color: #1f2a44; text-decoration: underline; cursor: pointer; font-size: 12px; padding: 0; }
+  header { background: #1f2a44; color: #fff; padding: 4px 24px 18px; }
+  header h1 { margin: 0; font-size: 20px; text-align: center; }
+  header p.sub { margin: 6px 0 0; text-align: center; font-size: 12px; color: #cdd3e0; }
+  .producto-desc { color: #666; font-size: 12px; margin: -4px 0 6px; }
+  .areas { display: flex; flex-wrap: wrap; gap: 10px; }
+  .area-btn { background: #fff; border: 1px solid #c9ccd3; border-radius: 6px; padding: 10px 12px; cursor: pointer; font-size: 13px; text-align: center; min-width: 90px; }
+  .area-btn:hover { border-color: #1f2a44; }
+  .area-btn .icono { font-size: 22px; display: block; margin-bottom: 4px; }
+  .numero-cotizacion { font-weight: bold; color: #1f2a44; }
+  main { max-width: 1150px; margin: 0 auto; padding: 20px; }
+  .card { background: #fff; border-radius: 8px; padding: 18px; margin-bottom: 18px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  label { font-size: 12px; color: #555; display: block; margin-bottom: 3px; }
+  input, select { width: 100%; padding: 6px 8px; border: 1px solid #c9ccd3; border-radius: 4px; font-size: 13px; box-sizing: border-box; }
+  input[readonly] { background: #f0f1f3; color: #555; }
+  .top-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  #tablaSectores { min-width: 1250px; }
+  .f-info { display: block; padding: 6px 2px; font-size: 12px; color: #333; }
+  .f-argumento { display: block; padding: 0 2px; font-size: 11px; color: #777; max-width: 220px; }
+  th, td { border: 1px solid #e1e3e8; padding: 6px 8px; text-align: left; }
+  th { background: #e8ecf5; }
+  #sectores tr.sector-row td { vertical-align: top; }
+  .quitar { background: #c0392b; color: #fff; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; font-size: 12px; }
+  .acciones { display: flex; gap: 10px; margin-top: 12px; }
+  button.primaria { background: #1f2a44; color: #fff; border: none; border-radius: 4px; padding: 9px 16px; cursor: pointer; font-size: 14px; }
+  button.secundaria { background: #fff; color: #1f2a44; border: 1px solid #1f2a44; border-radius: 4px; padding: 9px 16px; cursor: pointer; font-size: 14px; }
+  #estado { margin-top: 10px; font-size: 13px; color: #c0392b; min-height: 18px; }
+  .resumen-producto { border: 1px solid #e1e3e8; border-radius: 6px; padding: 12px; margin-bottom: 10px; }
+  .resumen-producto h3 { margin: 0 0 6px; font-size: 15px; }
+  .requisitos { margin-top: 6px; font-size: 12.5px; color: #333; }
+  .requisitos li { margin-bottom: 3px; }
+  .m2-total { font-weight: bold; }
+  .advertencia { background: #fdecec; border: 1px solid #f0b4b4; color: #8a2020; border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="logos">
+  <a href="https://www.mk.cl" target="_blank" rel="noopener"><img src="/assets/logo-mk.svg" alt="MK"></a>
+</div>
+<nav class="modenav">
+  <a href="/cotizador" class="active">Cotizar</a>
+  <a href="/selector">Selector</a>
+  <a href="/buscar">Buscar cotizaciones</a>
+  <a href="/estadisticas">Estadísticas</a>
+</nav>
+<div class="userbar">
+  <span id="userNombre"></span>
+  <button type="button" onclick="salir()">Salir</button>
+</div>
+<header>
+  <h1>COTIZADOR DE PISOS BLANDOS</h1>
+  <p class="sub">Revestimientos de muro MK — lista de materiales por sector, sin precios.</p>
+</header>
+<main>
+
+  <div class="card">
+    <div class="top-fields">
+      <div><label>Cliente</label><input id="cliente" placeholder="Nombre del cliente"></div>
+      <div><label>Vendedor</label><input id="vendedor" readonly></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="top-fields">
+      <div>
+        <label>N° cotización (para modificar una existente)</label>
+        <div style="display:flex; gap:8px;">
+          <input id="numeroModificar" type="number" min="1" placeholder="N°">
+          <button class="secundaria" style="white-space:nowrap" onclick="modificarCotizacion()">Modificar cotización</button>
+        </div>
+      </div>
+    </div>
+    <div id="bannerModificar" style="display:none; margin-top:10px; border:1px dashed #1f2a44; border-radius:6px; padding:10px; font-size:13px;"></div>
+  </div>
+
+  <div class="card">
+    <label>Agregar sector rápido</label>
+    <div class="areas" id="areasRapidas"></div>
+  </div>
+
+  <div class="card">
+    <div style="overflow-x:auto">
+    <table id="tablaSectores">
+      <thead>
+        <tr>
+          <th>Sector / Zona</th>
+          <th>¿Dónde se instala?</th>
+          <th>¿Sobre qué superficie?</th>
+          <th>¿Calor cerca?</th>
+          <th>Familia</th>
+          <th>Revestimiento</th>
+          <th>Info</th>
+          <th>m²</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="sectores"></tbody>
+    </table>
+    </div>
+    <div class="acciones">
+      <button class="secundaria" onclick="agregarSector()">+ Agregar sector</button>
+      <button class="primaria" onclick="cotizar()">Calcular materiales</button>
+      <button class="secundaria" onclick="generarCotizacion()">Generar cotización (Excel + PDF)</button>
+    </div>
+    <div id="estado"></div>
+  </div>
+
+  <div class="card" id="resultado" style="display:none">
+    <h2>Resultado</h2>
+    <p id="numeroCotizacion"></p>
+    <p>Superficie total: <span class="m2-total" id="m2TotalGlobal"></span> m²</p>
+    <div id="advertencias"></div>
+    <div id="productos"></div>
+
+    <h3>Adhesivo necesario</h3>
+    <table>
+      <thead><tr><th>Producto</th><th>Superficie base</th><th>SKU</th><th>Envases</th><th>Rendimiento</th><th>Alternativa mercado</th></tr></thead>
+      <tbody id="resumenAdhesivos"></tbody>
+    </table>
+
+    <h3>Resumen por área</h3>
+    <ul id="resumenAreas"></ul>
+
+    <h3>Resumen por recinto</h3>
+    <div id="resumenPorRecinto"></div>
+  </div>
+
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+<script src="/assets/visor-excel.js?v=1" defer></script>
+<script>
+let CATALOGO = null;
+let numeroEditando = null;
+
+function irALogin() { window.location = '/'; }
+
+function salir() {
+  fetch('/logout', { method: 'POST' }).then(irALogin).catch(irALogin);
+}
+
+async function cargarUsuario() {
+  const r = await fetch('/whoami');
+  if (r.status === 401) { irALogin(); throw new Error('No autenticado.'); }
+  const u = await r.json();
+  document.getElementById('userNombre').textContent = u.nombre;
+  document.getElementById('vendedor').value = u.nombre;
+}
+
+async function cargarCatalogo() {
+  const r = await fetch('/catalogo');
+  if (r.status === 401) { irALogin(); throw new Error('No autenticado.'); }
+  CATALOGO = await r.json();
+  renderAreasRapidas();
+}
+
+function renderAreasRapidas() {
+  const cont = document.getElementById('areasRapidas');
+  cont.innerHTML = CATALOGO.areas_plantilla.map((a, i) => `
+    <button type="button" class="area-btn" onclick="agregarAreaRapida(${i})">
+      <span class="icono">${a.icono}</span>${a.nombre}
+    </button>
+  `).join('');
+}
+
+function agregarAreaRapida(indice) {
+  agregarSector(CATALOGO.areas_plantilla[indice]);
+}
+
+function modificarCotizacion() {
+  const numero = document.getElementById('numeroModificar').value;
+  if (!numero) { mostrarEstado('Ingresa un N° de cotización.', true); return; }
+  cargarParaModificar(numero);
+}
+
+async function cargarParaModificar(numero) {
+  mostrarEstado('Buscando cotización N° ' + numero + '...', false);
+  try {
+    const r = await fetch('/cotizacion/' + numero);
+    if (r.status === 401) { irALogin(); return; }
+    const data = await r.json();
+    if (!r.ok) { mostrarEstado(data.detail || 'Error', true); return; }
+
+    document.getElementById('cliente').value = data.cliente || '';
+    document.getElementById('sectores').innerHTML = '';
+    data.sectores.forEach(s => agregarSector({
+      nombre: s.sector, lugar: s.lugar, superficie_base: s.superficie_base,
+      condicion_calor: s.condicion_calor, producto: s.producto, m2: s.m2,
+    }));
+
+    numeroEditando = data.numero;
+    const banner = document.getElementById('bannerModificar');
+    banner.style.display = 'block';
+    banner.innerHTML = 'Modificando la cotización N° <strong>' + data.numero +
+      '</strong>. Al generar, se creará un N° nuevo — esta no se sobrescribe.';
+    mostrarEstado('', false);
+  } catch (e) {
+    mostrarEstado('Error de conexión: ' + e.message, true);
+  }
+}
+
+function productosOfrecibles(lugar, calor) {
+  let opciones = CATALOGO.productos_por_lugar[lugar] || [];
+  if (calor && calor !== 'Sin fuente de calor') {
+    const campo = calor === 'Calefacción en muro' ? 'calefaccion_muro' : 'seca_toalla_bano';
+    opciones = opciones.filter(p => {
+      const v = (CATALOGO.productos[p][campo] || 'NO').toUpperCase();
+      return !v.startsWith('NO');
+    });
+  }
+  return opciones;
+}
+
+function agregarSector(plantilla) {
+  const tbody = document.getElementById('sectores');
+  const tr = document.createElement('tr');
+  tr.className = 'sector-row';
+
+  const lugarOpciones = CATALOGO.lugar_opciones.map(o => `<option value="${o}">${o}</option>`).join('');
+  const superficieOpciones = CATALOGO.superficie_base_opciones.map(o => `<option value="${o}">${o}</option>`).join('');
+  const calorOpciones = CATALOGO.condicion_calor_opciones.map(o => `<option value="${o}">${o}</option>`).join('');
+
+  tr.innerHTML = `
+    <td><input class="f-sector" placeholder="Ej: Baño visita"></td>
+    <td><select class="f-lugar" onchange="actualizarFamilia(this)">${lugarOpciones}</select></td>
+    <td><select class="f-superficie">${superficieOpciones}</select></td>
+    <td><select class="f-calor" onchange="actualizarFamilia(this.closest('tr').querySelector('.f-lugar'))">${calorOpciones}</select></td>
+    <td><select class="f-familia" onchange="actualizarProductosPorFamilia(this)"></select></td>
+    <td><select class="f-producto" onchange="actualizarInfo(this)"></select></td>
+    <td><span class="f-info"></span><span class="f-argumento"></span></td>
+    <td><input class="f-m2" type="number" min="0" step="0.1" value="0"></td>
+    <td><button class="quitar" onclick="this.closest('tr').remove()">Quitar</button></td>
+  `;
+  tbody.appendChild(tr);
+
+  if (plantilla) {
+    tr.querySelector('.f-sector').value = plantilla.nombre;
+    tr.querySelector('.f-lugar').value = plantilla.lugar;
+    tr.querySelector('.f-superficie').value = plantilla.superficie_base;
+    tr.querySelector('.f-calor').value = plantilla.condicion_calor || 'Sin fuente de calor';
+  }
+  actualizarFamilia(tr.querySelector('.f-lugar'));
+
+  if (plantilla && plantilla.producto) {
+    const infoProducto = CATALOGO.productos[plantilla.producto] || {};
+    const selectFamilia = tr.querySelector('.f-familia');
+    if (infoProducto.familia) selectFamilia.value = infoProducto.familia;
+    actualizarProductosPorFamilia(selectFamilia);
+    tr.querySelector('.f-producto').value = plantilla.producto;
+    actualizarInfo(tr.querySelector('.f-producto'));
+    if (plantilla.m2 !== undefined) tr.querySelector('.f-m2').value = plantilla.m2;
+  }
+}
+
+function actualizarFamilia(selectLugar) {
+  const tr = selectLugar.closest('tr');
+  const selectFamilia = tr.querySelector('.f-familia');
+  const lugar = selectLugar.value;
+  const calor = tr.querySelector('.f-calor').value;
+  const opcionesProducto = productosOfrecibles(lugar, calor);
+  const familias = [...new Set(opcionesProducto.map(p => CATALOGO.productos[p].familia))];
+  selectFamilia.innerHTML = familias.map(f => `<option value="${f}">${f}</option>`).join('');
+  actualizarProductosPorFamilia(selectFamilia);
+}
+
+function actualizarProductosPorFamilia(selectFamilia) {
+  const tr = selectFamilia.closest('tr');
+  const lugar = tr.querySelector('.f-lugar').value;
+  const calor = tr.querySelector('.f-calor').value;
+  const familia = selectFamilia.value;
+  const selectProducto = tr.querySelector('.f-producto');
+  const opciones = productosOfrecibles(lugar, calor)
+    .filter(p => CATALOGO.productos[p].familia === familia);
+  selectProducto.innerHTML = opciones.map(o => `<option value="${o}">${o}</option>`).join('');
+  actualizarInfo(selectProducto);
+}
+
+function actualizarInfo(selectProducto) {
+  const tr = selectProducto.closest('tr');
+  const producto = selectProducto.value;
+  const info = CATALOGO.productos[producto];
+  const infoSpan = tr.querySelector('.f-info');
+  const argumento = tr.querySelector('.f-argumento');
+  if (!info) { infoSpan.textContent = ''; argumento.textContent = ''; return; }
+  infoSpan.textContent = `${info.materialidad} · ${info.unidad_venta} (${info.equivalencia_m2} m²)`;
+  argumento.textContent = info.medidas || '';
+  argumento.title = argumento.textContent;
+}
+
+function leerSectores() {
+  const filas = document.querySelectorAll('#sectores tr.sector-row');
+  return Array.from(filas).map(tr => ({
+    sector: tr.querySelector('.f-sector').value || 'Sector',
+    lugar: tr.querySelector('.f-lugar').value,
+    superficie_base: tr.querySelector('.f-superficie').value,
+    condicion_calor: tr.querySelector('.f-calor').value,
+    producto: tr.querySelector('.f-producto').value,
+    m2: parseFloat(tr.querySelector('.f-m2').value) || 0,
+  }));
+}
+
+function armarRequest() {
+  return {
+    cliente: document.getElementById('cliente').value,
+    vendedor: document.getElementById('vendedor').value,
+    sectores: leerSectores(),
+    modificado_de: numeroEditando,
+  };
+}
+
+function mostrarEstado(msg, esError) {
+  const el = document.getElementById('estado');
+  el.textContent = msg || '';
+  el.style.color = esError ? '#c0392b' : '#2e7d32';
+}
+
+async function cotizar() {
+  mostrarEstado('Calculando...', false);
+  try {
+    const r = await fetch('/cotizar', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(armarRequest()),
+    });
+    if (r.status === 401) { irALogin(); return; }
+    const data = await r.json();
+    if (!r.ok) { mostrarEstado(data.detail || 'Error', true); return; }
+    renderResultado(data);
+    document.getElementById('numeroCotizacion').textContent = '';
+    mostrarEstado('', false);
+  } catch (e) {
+    mostrarEstado('Error de conexión: ' + e.message, true);
+  }
+}
+
+function renderRequisitos(r) {
+  const items = [];
+  if (r.no_pega_motivo) items.push(`<strong>No usa adhesivo:</strong> ${r.no_pega_motivo}`);
+  if (r.perfiles) items.push(`<strong>Perfiles de terminación:</strong> ${r.perfiles}${r.perfiles_sku ? ' — ' + r.perfiles_sku : ''}`);
+  if (r.fijaciones) items.push(`<strong>Fijaciones:</strong> ${r.fijaciones}`);
+  if (r.sello_canterias) items.push(`<strong>Sello de canterías:</strong> ${r.sello_canterias}${r.sello_sku ? ' — SKU ' + r.sello_sku : ''}`);
+  if (r.pintable) items.push(`<strong>¿Se puede pintar?:</strong> ${r.pintable}`);
+  items.push(`<strong>Limpieza y mantención:</strong> ${r.limpieza || ''} — ${r.limpiador_sku || ''}`);
+  return items.map(i => `<li>${i}</li>`).join('');
+}
+
+function renderResultado(data) {
+  document.getElementById('resultado').style.display = 'block';
+  document.getElementById('m2TotalGlobal').textContent = data.m2_total;
+
+  const adv = document.getElementById('advertencias');
+  adv.innerHTML = (data.advertencias_calor || []).map(a => `
+    <div class="advertencia">⚠ <strong>${a.producto}</strong> — ${a.condicion}: ${a.detalle}</div>
+  `).join('');
+
+  const cont = document.getElementById('productos');
+  cont.innerHTML = data.productos.map(p => `
+    <div class="resumen-producto">
+      <h3>${p.producto} <small>(${p.familia} · ${p.materialidad})</small></h3>
+      <p class="producto-desc">${p.medidas}</p>
+      <p>m² totales: <strong>${p.m2_total}</strong> &nbsp;|&nbsp; con ${Math.round((p.m2_necesarios / p.m2_total - 1) * 100) || 0}% merma: <strong>${p.m2_necesarios}</strong></p>
+      <p>Cantidad a comprar: <strong>${p.cantidad_necesaria ?? '—'} ${p.unidad_venta}</strong> <span style="color:#777">(${p.cantidad_por_caja_texto})</span></p>
+      <ul class="requisitos">${renderRequisitos(p.requisitos)}</ul>
+    </div>
+  `).join('');
+
+  const adh = document.getElementById('resumenAdhesivos');
+  adh.innerHTML = data.adhesivos.map(a => `
+    <tr>
+      <td>${a.producto}</td><td>${a.superficie_base}</td>
+      <td>${a.sku}${a.nombre_comercial ? ' (' + a.nombre_comercial + ')' : ''}</td>
+      <td>${a.envases_necesarios}</td><td>${a.rendimiento_m2} m²</td>
+      <td>${a.alternativa_mercado || '—'}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="6">Ningún producto cotizado usa adhesivo.</td></tr>';
+
+  const areas = document.getElementById('resumenAreas');
+  areas.innerHTML = data.resumen_areas.map(a => `<li><strong>${a.sector}:</strong> ${a.detalle}</li>`).join('');
+
+  const porRecinto = document.getElementById('resumenPorRecinto');
+  porRecinto.innerHTML = data.resumen_por_recinto.map(r => `
+    <h4 style="margin:10px 0 4px">${r.sector}</h4>
+    <table>
+      <thead><tr><th>Producto</th><th>Ítem</th><th>Cantidad</th></tr></thead>
+      <tbody>
+        ${r.items.map(it => `<tr><td>${it.producto}</td><td>${it.item}</td><td>${it.cantidad}</td></tr>`).join('') || '<tr><td colspan="3">Sin ítems</td></tr>'}
+      </tbody>
+    </table>
+  `).join('');
+}
+
+function descargar(url, nombre) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nombre || '';
+  a.click();
+}
+
+async function generarCotizacion() {
+  const ventanaVisor = abrirVentanaVisorPendiente();
+  mostrarEstado('Generando cotización...', false);
+  try {
+    const r = await fetch('/cotizar/generar', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(armarRequest()),
+    });
+    if (r.status === 401) {
+      if (ventanaVisor && !ventanaVisor.closed) ventanaVisor.close();
+      irALogin();
+      return;
+    }
+    const data = await r.json();
+    if (!r.ok) {
+      if (ventanaVisor && !ventanaVisor.closed) ventanaVisor.close();
+      mostrarEstado(data.detail || 'Error', true);
+      return;
+    }
+
+    renderResultado(data.resultado);
+    document.getElementById('numeroCotizacion').innerHTML =
+      'Cotización N° <span class="numero-cotizacion">' + data.numero + '</span> generada.';
+
+    descargarExcelConVisor(`/descarga/${data.numero}/excel`, data.nombre_excel, ventanaVisor);
+    descargar(`/descarga/${data.numero}/pdf`, data.nombre_pdf);
+    mostrarEstado('✔ Cotización N° ' + data.numero + ' generada — se descargaron el Excel y el PDF (el Excel también se abrió en una pestaña aparte para verlo y copiar SKU/cantidades sin necesitar Excel instalado).', false);
+  } catch (e) {
+    if (ventanaVisor && !ventanaVisor.closed) ventanaVisor.close();
+    mostrarEstado('Error de conexión: ' + e.message, true);
+  }
+}
+
+cargarUsuario();
+cargarCatalogo().then(function () {
+  const numeroEditar = new URLSearchParams(location.search).get('editar');
+  if (numeroEditar) {
+    document.getElementById('numeroModificar').value = numeroEditar;
+    cargarParaModificar(numeroEditar);
+  }
+});
+</script>
+</body>
+</html>

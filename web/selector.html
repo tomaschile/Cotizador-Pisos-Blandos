@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Selector de Revestimientos — Cotizador de Pisos Blandos</title>
+<style>
+  :root { font-family: Arial, Helvetica, sans-serif; }
+  body { margin: 0; background: #f4f5f7; color: #1f2a44; }
+  .logos { display: flex; align-items: center; justify-content: center; background: #fff; padding: 14px 16px; border-bottom: 1px solid #d7dce1; }
+  .logos img { height: 34px; width: auto; display: block; }
+  .modenav { display: flex; flex-wrap: wrap; gap: 18px; justify-content: center; background: #1f2a44; padding: 14px 24px; font-size: 13px; }
+  .modenav a { color: #cdd3e0; text-decoration: none; padding: 2px 2px; border-bottom: 2px solid transparent; }
+  .modenav a:hover { color: #fff; }
+  .modenav a.active { color: #fff; border-bottom-color: #fff; font-weight: bold; }
+  .userbar { display: flex; justify-content: flex-end; gap: 10px; align-items: baseline; max-width: 980px; margin: 10px auto -4px; padding: 0 20px; font-size: 12px; color: #666; }
+  .userbar button { background: none; border: none; color: #1f2a44; text-decoration: underline; cursor: pointer; font-size: 12px; padding: 0; }
+  header { background: #1f2a44; color: #fff; padding: 4px 24px 18px; }
+  header h1 { margin: 0; font-size: 20px; text-align: center; }
+  header p.sub { margin: 6px 0 0; text-align: center; font-size: 12px; color: #cdd3e0; }
+  main { max-width: 980px; margin: 0 auto; padding: 20px; }
+  .card { background: #fff; border-radius: 8px; padding: 18px; margin-bottom: 18px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .card h2 { margin: 0 0 12px; font-size: 15px; color: #1f2a44; }
+  .card h2 .n { display:inline-block; background:#1f2a44; color:#fff; width:20px; height:20px; border-radius:50%; text-align:center; line-height:20px; font-size:12px; margin-right:8px; }
+  label { font-size: 12px; color: #555; display: block; margin-bottom: 3px; }
+  select, input { width: 100%; padding: 7px 8px; border: 1px solid #c9ccd3; border-radius: 4px; font-size: 13px; box-sizing: border-box; }
+  .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .fields3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .ficha { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 13px; }
+  .ficha div b { display: block; font-size: 11px; color: #777; text-transform: uppercase; font-weight: normal; }
+  .respuesta-fila { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 13.5px; }
+  .respuesta-fila:last-child { border-bottom: none; }
+  .badge { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; font-size: 13px; flex-shrink: 0; font-weight: bold; }
+  .badge.si { background: #e3f2e6; color: #2e7d32; }
+  .badge.no { background: #fdecec; color: #c0392b; }
+  .badge.warn { background: #fff4e0; color: #b8720a; }
+  .badge.neutral { background: #eceef1; color: #777; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { border: 1px solid #e1e3e8; padding: 6px 8px; text-align: left; }
+  th { background: #e8ecf5; }
+  td.ok { color: #2e7d32; font-weight: bold; }
+  td.bad { color: #c0392b; font-weight: bold; }
+  .requisitos-lista { font-size: 13.5px; }
+  .requisitos-lista li { margin-bottom: 6px; }
+  .nota { color: #777; font-size: 12px; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="logos">
+  <a href="https://www.mk.cl" target="_blank" rel="noopener"><img src="/assets/logo-mk.svg" alt="MK"></a>
+</div>
+<nav class="modenav">
+  <a href="/cotizador">Cotizar</a>
+  <a href="/selector" class="active">Selector</a>
+  <a href="/buscar">Buscar cotizaciones</a>
+  <a href="/estadisticas">Estadísticas</a>
+</nav>
+<div class="userbar">
+  <span id="userNombre"></span>
+  <button type="button" onclick="salir()">Salir</button>
+</div>
+<header>
+  <h1>SELECTOR DE REVESTIMIENTOS DE MURO</h1>
+  <p class="sub">Elige el revestimiento y responde las 3 preguntas al cliente — indica si se puede, qué adhesivo usar y qué más se necesita.</p>
+</header>
+<main>
+
+  <div class="card">
+    <h2><span class="n">1</span>¿Qué revestimiento consulta el cliente?</h2>
+    <div class="fields">
+      <div>
+        <label>Si el cliente aún no tiene claro el revestimiento: filtrar por sector</label>
+        <select id="filtroLugar" onchange="actualizarOpcionesProducto()">
+          <option value="">(mostrar todos)</option>
+        </select>
+      </div>
+      <div>
+        <label>Revestimiento</label>
+        <select id="producto" onchange="recalcular()"></select>
+      </div>
+    </div>
+    <div class="ficha" id="ficha"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">2</span>Preguntas al cliente</h2>
+    <div class="fields3">
+      <div>
+        <label>¿En qué sector lo quiere instalar?</label>
+        <select id="lugar" onchange="recalcular()"></select>
+      </div>
+      <div>
+        <label>¿Sobre qué superficie lo va a instalar?</label>
+        <select id="superficie" onchange="recalcular()"></select>
+      </div>
+      <div>
+        <label>¿Habrá calefacción o seca toalla cerca?</label>
+        <select id="calor" onchange="recalcular()"></select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">3</span>Respuesta</h2>
+    <div id="respuesta"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">4</span>Lo necesario para instalar</h2>
+    <ul class="requisitos-lista" id="necesario"></ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">5</span>Adhesivo según superficie (todas las opciones)</h2>
+    <table>
+      <thead><tr><th>Superficie</th><th>¿Se puede?</th><th>Adhesivo MK y rendimiento</th><th>Preparación</th></tr></thead>
+      <tbody id="tablaSuperficies"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">6</span>¿Dónde se puede instalar este revestimiento?</h2>
+    <table>
+      <thead><tr><th>Lugar / condición</th><th>¿Se puede?</th><th>Detalle</th></tr></thead>
+      <tbody id="tablaLugares"></tbody>
+    </table>
+    <p class="nota">Ante dudas técnicas, consultar al asesor de tienda o el manual de instalación del fabricante.</p>
+  </div>
+
+</main>
+
+<script>
+let CATALOGO = null;
+
+function irALogin() { window.location = '/'; }
+function salir() { fetch('/logout', { method: 'POST' }).then(irALogin).catch(irALogin); }
+
+async function cargarUsuario() {
+  const r = await fetch('/whoami');
+  if (r.status === 401) { irALogin(); throw new Error('No autenticado.'); }
+  const u = await r.json();
+  document.getElementById('userNombre').textContent = u.nombre;
+}
+
+async function cargarCatalogo() {
+  const r = await fetch('/catalogo');
+  if (r.status === 401) { irALogin(); throw new Error('No autenticado.'); }
+  CATALOGO = await r.json();
+  inicializarSelects();
+  recalcular();
+}
+
+function inicializarSelects() {
+  document.getElementById('filtroLugar').insertAdjacentHTML('beforeend',
+    CATALOGO.lugar_info_opciones.map(o => `<option value="${o}">${o}</option>`).join(''));
+
+  const productos = Object.keys(CATALOGO.productos).sort();
+  document.getElementById('producto').innerHTML =
+    productos.map(p => `<option value="${p}">${p}</option>`).join('');
+
+  document.getElementById('lugar').innerHTML =
+    CATALOGO.lugar_info_opciones.map(o => `<option value="${o}">${o}</option>`).join('');
+  document.getElementById('superficie').innerHTML =
+    CATALOGO.superficie_base_opciones.map(o => `<option value="${o}">${o}</option>`).join('');
+  document.getElementById('calor').innerHTML =
+    CATALOGO.condicion_calor_opciones.map(o => `<option value="${o}">${o}</option>`).join('');
+}
+
+function actualizarOpcionesProducto() {
+  const lugar = document.getElementById('filtroLugar').value;
+  const selectProducto = document.getElementById('producto');
+  const anterior = selectProducto.value;
+  let productos = Object.keys(CATALOGO.productos).sort();
+  if (lugar) {
+    productos = CATALOGO.productos_por_lugar[lugar] || [];
+  }
+  if (!productos.length) {
+    selectProducto.innerHTML = '<option value="">(ningún producto disponible para este lugar)</option>';
+  } else {
+    selectProducto.innerHTML = productos.map(p => `<option value="${p}">${p}</option>`).join('');
+    if (productos.includes(anterior)) selectProducto.value = anterior;
+  }
+  recalcular();
+}
+
+function badge(clase, icono) {
+  return `<span class="badge ${clase}">${icono}</span>`;
+}
+
+function verdictoBooleano(compatible) {
+  return compatible
+    ? { icono: '✔', clase: 'si', texto: 'Compatible' }
+    : { icono: '✖', clase: 'no', texto: 'No recomendado' };
+}
+
+function verdictoTexto(valor) {
+  if (!valor) return { icono: '✖', clase: 'no', texto: 'No recomendado' };
+  const v = valor.trim().toUpperCase();
+  if (v.startsWith('NO')) return { icono: '✖', clase: 'no', texto: 'No recomendado' };
+  if (v === 'SI' || v === 'SÍ') return { icono: '✔', clase: 'si', texto: 'Compatible' };
+  if (v.startsWith('SI') || v.startsWith('SÍ')) return { icono: '⚠', clase: 'warn', texto: 'Con condiciones' };
+  return { icono: '✔', clase: 'si', texto: 'Compatible' };
+}
+
+function compatibleSuperficie(info, superficie) {
+  if (superficie === CATALOGO.superficie_ceramica) return info.instalacion_sobre_ceramicos;
+  if (superficie === 'Muro de cemento / hormigón') return true;
+  return info.instalacion_sobre_yeso_madera_internit;
+}
+
+function adhesivoParaSuperficie(info, superficie) {
+  return superficie === CATALOGO.superficie_ceramica ? info.adhesivo_ceramica : info.adhesivo_estandar;
+}
+
+function textoAdhesivo(adh) {
+  if (!adh) return null;
+  let t = adh.sku + (adh.nombre_comercial || adh.nombre ? ' ' + (adh.nombre_comercial || adh.nombre) : '');
+  t += ` (Rend. ${adh.rendimiento_m2} m²)`;
+  if (adh.envase) t += ` — envase ${adh.envase}`;
+  return t;
+}
+
+function recalcular() {
+  if (!CATALOGO) return;
+  const nombre = document.getElementById('producto').value;
+  const info = CATALOGO.productos[nombre];
+  if (!info) { return; }
+
+  document.getElementById('ficha').innerHTML = `
+    <div><b>Familia</b>${info.familia}</div>
+    <div><b>Material</b>${info.materialidad}</div>
+    <div><b>Uso</b>${info.uso || '—'}</div>
+    <div><b>Medidas</b>${info.medidas}</div>
+    <div><b>Equivalencia</b>${info.equivalencia_m2} m² por ${info.unidad_venta.toLowerCase()}</div>
+    <div><b>Cantidad por caja</b>${info.cantidad_por_caja_texto}</div>
+    <div><b>¿Se puede pintar?</b>${info.pintable || 'NO'}</div>
+  `;
+
+  const lugar = document.getElementById('lugar').value;
+  const superficie = document.getElementById('superficie').value;
+  const calor = document.getElementById('calor').value;
+
+  const claveLugar = CATALOGO.lugar_info_clave[lugar];
+  const vLugar = verdictoBooleano(!!(info.lugares && info.lugares[claveLugar]));
+  const vSuperficie = verdictoBooleano(compatibleSuperficie(info, superficie));
+
+  let vCalor, detalleCalor;
+  if (calor === 'Sin fuente de calor') {
+    vCalor = { icono: '➖', clase: 'neutral', texto: 'No aplica' };
+    detalleCalor = 'El sector no tiene fuente de calor cercana.';
+  } else {
+    const campo = calor === 'Calefacción en muro' ? 'calefaccion_muro' : 'seca_toalla_bano';
+    detalleCalor = info[campo] || 'NO';
+    vCalor = verdictoTexto(info[campo]);
+  }
+
+  document.getElementById('respuesta').innerHTML = `
+    <div class="respuesta-fila">${badge(vLugar.clase, vLugar.icono)}
+      <div>¿Se puede instalar en: <strong>${lugar}</strong>? — ${vLugar.texto}</div></div>
+    <div class="respuesta-fila">${badge(vSuperficie.clase, vSuperficie.icono)}
+      <div>¿Se puede instalar sobre: <strong>${superficie}</strong>? — ${vSuperficie.texto}</div></div>
+    <div class="respuesta-fila">${badge(vCalor.clase, vCalor.icono)}
+      <div>¿Es compatible con: <strong>${calor}</strong>? — ${vCalor.texto}${calor !== 'Sin fuente de calor' ? ' — ' + detalleCalor : ''}</div></div>
+  `;
+
+  const puedeSuperficie = compatibleSuperficie(info, superficie);
+  const adh = adhesivoParaSuperficie(info, superficie);
+  let adhesivoHtml;
+  if (!puedeSuperficie) {
+    adhesivoHtml = '<span style="color:#c0392b">No se recomienda instalar este producto sobre esta superficie.</span>';
+  } else if (adh) {
+    adhesivoHtml = textoAdhesivo(adh);
+  } else if (info.no_pega_motivo) {
+    adhesivoHtml = `No usa adhesivo: ${info.no_pega_motivo}`;
+  } else {
+    adhesivoHtml = '—';
+  }
+
+  const items = [];
+  items.push(`<li><strong>Adhesivo MK indicado:</strong> ${adhesivoHtml}</li>`);
+  items.push(`<li><strong>Preparación de la superficie:</strong> ${CATALOGO.preparacion_por_superficie[superficie] || '—'}</li>`);
+  if (info.alternativa_mercado) items.push(`<li><strong>Alternativa de adhesivo (mercado):</strong> ${info.alternativa_mercado}</li>`);
+  items.push(`<li><strong>Perfiles de terminación:</strong> ${info.requiere_perfiles ? info.requiere_perfiles + (info.perfil_sku_texto ? ' — ' + info.perfil_sku_texto : '') : 'No requiere'}</li>`);
+  items.push(`<li><strong>Fijaciones:</strong> ${info.requiere_fijaciones || 'No requiere'}</li>`);
+  items.push(`<li><strong>Sello de canterías:</strong> ${info.sello_canterias ? info.sello_canterias + ' — SKU ' + (info.sku_sello || 'N/A') : 'No requiere'}</li>`);
+  items.push(`<li><strong>¿Se puede pintar?:</strong> ${info.pintable || 'NO'}</li>`);
+  items.push(`<li><strong>Limpieza y mantención:</strong> ${info.limpieza_tipo || ''} — ${info.limpiador_sku || ''}</li>`);
+  document.getElementById('necesario').innerHTML = items.join('');
+
+  document.getElementById('tablaSuperficies').innerHTML = CATALOGO.superficie_base_opciones.map(s => {
+    const puede = compatibleSuperficie(info, s);
+    const a = adhesivoParaSuperficie(info, s);
+    let texto;
+    if (!puede) texto = '—';
+    else if (a) texto = textoAdhesivo(a);
+    else if (info.no_pega_motivo) texto = info.no_pega_motivo;
+    else texto = '—';
+    return `<tr>
+      <td>${s}</td>
+      <td class="${puede ? 'ok' : 'bad'}">${puede ? '✔ Compatible' : '✖ No recomendado'}</td>
+      <td>${texto}</td>
+      <td>${CATALOGO.preparacion_por_superficie[s]}</td>
+    </tr>`;
+  }).join('');
+
+  const filasLugar = CATALOGO.lugar_info_opciones.map(l => {
+    const clave = CATALOGO.lugar_info_clave[l];
+    const puede = !!(info.lugares && info.lugares[clave]);
+    let detalle = puede ? 'Compatible' : 'No recomendado';
+    if (l === 'Cielo' && puede && info.condicion_cielo) detalle = info.condicion_cielo;
+    return `<tr>
+      <td>${l}</td>
+      <td class="${puede ? 'ok' : 'bad'}">${puede ? '✔ Compatible' : '✖ No recomendado'}</td>
+      <td>${detalle}</td>
+    </tr>`;
+  });
+  const filasCalor = [
+    ['Calefacción en muro', info.calefaccion_muro],
+    ['Seca toalla en baño', info.seca_toalla_bano],
+  ].map(([etiqueta, valor]) => {
+    const v = verdictoTexto(valor);
+    return `<tr>
+      <td>${etiqueta}</td>
+      <td class="${v.clase === 'si' ? 'ok' : (v.clase === 'no' ? 'bad' : '')}">${v.icono} ${v.texto}</td>
+      <td>${valor || 'NO'}</td>
+    </tr>`;
+  });
+  document.getElementById('tablaLugares').innerHTML = filasLugar.concat(filasCalor).join('');
+}
+
+cargarUsuario();
+cargarCatalogo();
+</script>
+</body>
+</html>

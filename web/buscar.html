@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buscar cotizaciones — Cotizador de Pisos Blandos</title>
+<style>
+  :root {
+    --bg:#ffffff; --panel:#fff; --text:#1a1d21; --muted:#5b6570; --border:#d7dce1;
+    --accent:#1f2a44; --accent-text:#fff; --head:#1f2a44; --zebra:#f6f8fb;
+    --err-bg:#fdecec; --err-border:#f0b4b4; --err-text:#8a2020;
+    --shadow:0 1px 3px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.06);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0f1216; --panel:#1a1e24; --text:#e8eaed; --muted:#9aa4af; --border:#2c333c;
+      --accent:#4f8cff; --accent-text:#0b1020; --head:#25406b; --zebra:#161b21;
+      --err-bg:#2a1618; --err-border:#5c2f33; --err-text:#f0a9a9;
+      --shadow:0 1px 3px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding:0 16px 64px}
+  .wrap{max-width:900px;margin:0 auto}
+  .logos{display:flex;align-items:center;justify-content:center;background:#fff;
+    border-bottom:1px solid var(--border);border-radius:0 0 12px 12px;padding:18px 16px;margin:0 -16px 0}
+  .logos img{height:34px;width:auto;display:block}
+  .modenav{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;margin:24px 0 18px;font-size:.9rem}
+  .modenav a{color:var(--muted);text-decoration:none;padding:4px 2px;border-bottom:2px solid transparent}
+  .modenav a:hover{color:var(--accent)}
+  .modenav a.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+  .userbar{display:flex;justify-content:flex-end;gap:10px;align-items:baseline;margin:-10px 0 10px;font-size:.78rem;color:var(--muted)}
+  .userbar button{background:none;border:none;color:var(--accent);text-decoration:underline;cursor:pointer;font-size:.78rem;padding:0}
+  h1{font-size:1.5rem;margin:0 0 6px;letter-spacing:.02em;text-align:center}
+  .sub{color:var(--muted);margin:0 0 24px;text-align:center}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:24px;box-shadow:var(--shadow)}
+  .searchRow{display:flex;gap:10px;flex-wrap:wrap}
+  .searchRow input{flex:1;min-width:160px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;
+    background:var(--bg);color:var(--text);font:inherit}
+  input[type=password]{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;
+    background:var(--bg);color:var(--text);font:inherit;margin-bottom:12px}
+  button{font:inherit;font-weight:600;cursor:pointer;border-radius:8px;border:1px solid transparent;
+    padding:10px 18px;background:var(--accent);color:var(--accent-text)}
+  .descarga{background:var(--bg);color:var(--accent);border:1px solid var(--accent);padding:5px 10px;font-size:.8rem;margin-right:6px}
+  .status{margin-top:14px;font-size:.92rem;display:none}
+  .status.show{display:block}
+  .status.err{background:var(--err-bg);border:1px solid var(--err-border);color:var(--err-text);
+    border-radius:8px;padding:12px}
+  .tablecard{margin-top:24px;padding:8px;overflow-x:auto}
+  table{border-collapse:collapse;width:100%;min-width:560px;font-size:.92rem}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+  thead th{background:var(--head);color:#fff;position:sticky;top:0}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  tbody tr:nth-child(even){background:var(--zebra)}
+  .empty{color:var(--muted);padding:24px;text-align:center}
+  .sectionTitle{font-weight:600;margin:24px 0 4px;padding:8px 4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logos">
+    <a href="https://www.mk.cl" target="_blank" rel="noopener"><img src="/assets/logo-mk.svg" alt="MK"></a>
+  </div>
+  <nav class="modenav">
+    <a href="/cotizador">Cotizar</a>
+    <a href="/selector">Selector</a>
+    <a href="/buscar" class="active">Buscar cotizaciones</a>
+    <a href="/estadisticas">Estadísticas</a>
+  </nav>
+  <div class="userbar">
+    <span id="userNombre"></span>
+    <button type="button" onclick="salir()">Salir</button>
+  </div>
+
+  <h1>BUSCAR COTIZACIONES</h1>
+  <p class="sub">Ingresa la clave para ver el historial y buscar por N° o cliente.</p>
+
+  <div class="card" id="login">
+    <input type="password" id="clave" placeholder="Clave de acceso">
+    <button onclick="entrar()">Entrar</button>
+    <div id="mensajeLogin" class="status err"></div>
+  </div>
+
+  <div id="contenido" style="display:none">
+    <div class="card">
+      <div class="searchRow">
+        <input id="filtro" type="text" placeholder="Buscar por N° o cliente..." oninput="filtrar()">
+      </div>
+    </div>
+
+    <p class="sectionTitle">Cotizaciones</p>
+    <div class="card tablecard">
+      <table id="tabla" hidden>
+        <thead>
+          <tr><th class="num">N°</th><th>Fecha</th><th>Cliente</th><th>Vendedor</th><th class="num">m² total</th><th></th></tr>
+        </thead>
+        <tbody id="filas"></tbody>
+      </table>
+      <div id="tablaEmpty" class="empty">Sin resultados.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let TODAS = [];
+
+function irALogin() { window.location = '/'; }
+
+function salir() {
+  fetch('/logout', { method: 'POST' }).then(irALogin).catch(irALogin);
+}
+
+fetch('/whoami').then(r => {
+  if (r.status === 401) { irALogin(); return; }
+  return r.json();
+}).then(u => { if (u) document.getElementById('userNombre').textContent = u.nombre; });
+
+async function entrar() {
+  const clave = document.getElementById('clave').value;
+  const r = await fetch('/estadisticas/datos', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({clave}),
+  });
+  if (r.status === 401) { irALogin(); return; }
+  const data = await r.json();
+  const mensaje = document.getElementById('mensajeLogin');
+  if (!r.ok) {
+    mensaje.textContent = data.detail || 'Error';
+    mensaje.classList.add('show');
+    return;
+  }
+  mensaje.classList.remove('show');
+  TODAS = data.cotizaciones;
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('contenido').style.display = 'block';
+  renderFilas(TODAS);
+}
+
+function filtrar() {
+  const q = document.getElementById('filtro').value.trim().toLowerCase();
+  if (!q) { renderFilas(TODAS); return; }
+  const filtradas = TODAS.filter(c =>
+    String(c.id).includes(q) || (c.cliente || '').toLowerCase().includes(q)
+  );
+  renderFilas(filtradas);
+}
+
+function renderFilas(cotizaciones) {
+  const tabla = document.getElementById('tabla');
+  const tbody = document.getElementById('filas');
+  const vacio = document.getElementById('tablaEmpty');
+  if (!cotizaciones.length) {
+    tabla.hidden = true;
+    vacio.hidden = false;
+    return;
+  }
+  tabla.hidden = false;
+  vacio.hidden = true;
+  tbody.innerHTML = cotizaciones.map(c => `
+    <tr>
+      <td class="num">${c.id}</td>
+      <td>${c.fecha}</td>
+      <td>${c.cliente || ''}</td>
+      <td>${c.vendedor || ''}</td>
+      <td class="num">${c.m2_total}</td>
+      <td>
+        <button class="descarga" onclick="descargar(${c.id}, 'excel')">Excel</button>
+        <button class="descarga" onclick="descargar(${c.id}, 'pdf')">PDF</button>
+        <button class="descarga" onclick="modificar(${c.id})">Modificar</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function descargar(numero, tipo) {
+  const a = document.createElement('a');
+  a.href = `/descarga/${numero}/${tipo}`;
+  a.click();
+}
+
+function modificar(numero) {
+  window.location = `/cotizador?editar=${numero}`;
+}
+</script>
+</body>
+</html>
